@@ -18,17 +18,16 @@ def save_for_web(report_df, stock_code):
     """
     【核心功能】将全量审计结果保存为 JSON，路径标准化
     """
-    # 动态获取当前脚本所在目录，确保在 GitHub 环境下不跑偏
     current_dir = os.path.dirname(os.path.abspath(__file__))
     output_dir = os.path.join(current_dir, "data")
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    # 复制一份数据进行 JSON 转换
+    # 复制一份数据进行 JSON 转换，确保不影响原始 report_df
     web_df = report_df.copy()
     
-    # 1. 定义你想要保留的港股指标精选列表
+    # 1. 定义想要保留的港股指标精选列表
     hk_keep_list = [
         "报告日", "资产负债率(%)", "现金占比(%)", "流动比率", "速动比率", 
         "商誉占比(%)", "存货堆积超额(%)", "销售毛利率(%)", "销售净利率(%)", 
@@ -38,17 +37,17 @@ def save_for_web(report_df, stock_code):
         "净资产收益率(ROE/%)", "资产边际贡献(营收/投入)", "有形净资产收益率(%)"
     ]
 
-    # 2. 执行屏蔽逻辑
+    # 2. 执行屏蔽逻辑 (注意这里全部统一使用 web_df)
     is_hk = len(str(stock_code)) == 5
     if is_hk:
-        # 假设你的原始数据存储在 df (DataFrame) 中
         # 只保留存在于 hk_keep_list 中的列
-        existing_columns = [col for col in hk_keep_list if col in df.columns]
-        df = df[existing_columns]
+        existing_columns = [col for col in hk_keep_list if col in web_df.columns]
+        web_df = web_df[existing_columns]
         print(f"💡 已完成港股字段精简，保留了 {len(existing_columns)} 个核心指标")
     
     json_path = os.path.join(output_dir, f"{stock_code}.json")
-    # orient='records' 是前端表格最喜欢的格式
+    
+    # 保存为 JSON
     web_df.to_json(json_path, orient='records', force_ascii=False, date_format='iso')
     print(f"✅ JSON 数据已就绪: {json_path}")
 
