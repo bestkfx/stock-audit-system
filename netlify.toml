@@ -1,0 +1,8 @@
+[build]
+  # 只有当 index.html 发生变化时，才触发 Netlify 的构建
+  # 这样更新 data 文件夹下的 JSON 数据时，就不会扣除你的 300 分钟额度
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- index.html"
+
+[build.environment]
+  # 确保 Python 或其他环境正常（可选）
+  NODE_VERSION = "20"
