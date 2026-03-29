@@ -89,19 +89,50 @@
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
 
-        if (!code) {
-            document.body.innerHTML = "<div class='card'><h2>未指定股票代码</h2><p>请在链接后添加 ?code=002594</p></div>";
-        } else {
-            fetch(`./data/${code}.json`)
-                .then(response => {
-                    if (!response.ok) throw new Error('数据尚未录入或代码错误');
-                    return response.json();
-                })
-                .then(data => renderTable(data))
-                .catch(err => {
-                    document.getElementById('tableContainer').innerHTML = `<p style="color:red; padding:20px;">${err.message}</p>`;
-                });
-        }
+       if (!code) {
+        document.body.innerHTML = `
+            <div class='card'>
+                <h2>未指定股票代码</h2>
+                <p>请输入正确的股票代码进行查询。</p>
+            </div>`;
+    } else {
+        // 尝试获取对应的 JSON 数据
+        fetch(`./data/${code}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    // 如果文件不存在（404），跳到错误处理
+                    throw new Error('NOT_FOUND');
+                }
+                return response.json();
+            })
+            .then(data => renderTable(data))
+            .catch(err => {
+                // 自定义错误提示界面
+                const container = document.getElementById('tableContainer');
+                const stockNameHeader = document.getElementById('stockName');
+                
+                stockNameHeader.innerText = "查询提示";
+                
+                if (err.message === 'NOT_FOUND') {
+                    container.innerHTML = `
+                        <div style="padding: 20px; text-align: center; line-height: 1.8;">
+                            <div style="font-size: 50px; margin-bottom: 10px;">📊</div>
+                            <p style="color: #333; font-weight: bold;">抱歉，该股票暂无审计数据</p>
+                            <p style="color: #666; font-size: 0.9rem;">
+                                由于财务数据需手工整理与云端校验，难免存在不齐全的情况。<br><br>
+                                <b>补充方式：</b><br>
+                                请到微信公众号 <span style="color: #007bff;">【时间积分】</span> 任意一篇文章留言告知代码，我将为您尽快补充完善。
+                            </p>
+                            <div style="margin-top: 20px; border-top: 1px dashed #ccc; pt: 10px;">
+                                <small style="color: #999;">感谢您的支持与理解</small>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<p style="color:red; padding:20px;">系统错误: ${err.message}</p>`;
+                }
+            });
+    }
 
         function renderTable(data) {
             document.getElementById('stockName').innerText = "深度财务审计报告";
