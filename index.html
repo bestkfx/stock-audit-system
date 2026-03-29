@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度财务审计报告</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f4f7f6; }
+        .card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #2c3e50; border-left: 4px solid #3498db; padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        th { background: #f8f9fa; }
+        .green { color: #27ae60; font-weight: bold; }
+        .red { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 id="stockName">正在加载数据...</h2>
+        <p id="stockInfo">股票代码: --</p>
+    </div>
+
+    <div class="card">
+        <h3>审计明细</h3>
+        <div id="tableContainer">加载中...</div>
+    </div>
+
+    <script>
+        // 1. 从 URL 获取股票代码，例如 index.html?code=002594
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (!code) {
+            document.body.innerHTML = "<h1>请输入正确的股票代码</h1>";
+        } else {
+            // 2. 动态去寻找对应的 JSON 文件
+            fetch(`./data/${code}.json`)
+                .then(response => {
+                    if (!response.ok) throw new Error('该股票数据尚未录入');
+                    return response.json();
+                })
+                .then(data => {
+                    renderTable(data);
+                })
+                .catch(err => {
+                    document.getElementById('tableContainer').innerHTML = `<p style="color:red">${err.message}</p>`;
+                });
+        }
+
+        function renderTable(data) {
+            document.getElementById('stockName').innerText = "财务审计报告";
+            document.getElementById('stockInfo').innerText = `查询代码: ${code}`;
+            
+            let html = '<table><thead><tr>';
+            // 动态生成表头
+            const keys = Object.keys(data[0]);
+            keys.forEach(key => html += `<th>${key}</th>`);
+            html += '</tr></thead><tbody>';
+
+            // 填充数据
+            data.forEach(row => {
+                html += '<tr>';
+                keys.forEach(key => {
+                    let val = row[key];
+                    // 简单的染色逻辑：比如 ROE > 15% 变绿
+                    let className = (key.includes('ROE') && val > 15) ? 'green' : '';
+                    html += `<td class="${className}">${val ?? '--'}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
