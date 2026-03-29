@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 import json
+import sys  # 务必在文件顶部加入 import sys
 
 def safe_get(df, cols):
     """稳健取数工具：支持多科目匹配，返回 Series"""
@@ -189,9 +190,15 @@ def run_investigation(stock_code):
     return engine.report_df.copy()
 
 if __name__ == "__main__":
-    task_list = ["600690", "002594", "01211"] 
-    for code in task_list:
-        try:
+    # 获取命令行参数
+    # sys.argv[0] 是脚本名，sys.argv[1] 是我们传进去的代码
+    if len(sys.argv) > 1:
+        # 如果 Actions 传了参数进来，就只跑这个代码
+        target_code = sys.argv[1]
+        print(f"接到手动指令，开始审计: {target_code}")
+        run_investigation(target_code)
+    else:
+        # 如果没有参数（比如本地直接运行），跑默认列表
+        default_list = ["600690", "002594"] 
+        for code in default_list:
             run_investigation(code)
-        except Exception as e:
-            print(f"❌ 股票 {code} 处理失败: {e}")
