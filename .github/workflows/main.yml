@@ -1,0 +1,33 @@
+name: Stock Auto Audit
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 允许你在 Actions 页面点按钮手动运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install pandas openpyxl requests xlsxwriter
+
+    - name: Run audit script
+      run: python main.py
+
+    - name: Commit and push JSON data
+      run: |
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        git add data/*.json
+        git commit -m "Update stock data JSON" || echo "No changes to commit"
+        git push
