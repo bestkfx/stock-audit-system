@@ -3,7 +3,13 @@ name: Stock Auto Audit
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # 允许你在 Actions 页面点按钮手动运行
+  workflow_dispatch:
+    # 增加输入框，允许手动输入股票代码
+    inputs:
+      stock_code:
+        description: '请输入要审计的股票代码 (如 600519 或 00700)'
+        required: true
+        default: '002594'
 
 jobs:
   build:
@@ -13,20 +19,30 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: ambassadors/setup-python@v4
       with:
         python-version: '3.9'
 
     - name: Install dependencies
       run: |
         pip install pandas openpyxl requests xlsxwriter akshare
+
     - name: Run audit script
-      run: python main.py
+      # 这里的 ${{ github.event.inputs.stock_code }} 会获取你点击按钮时输入的内容
+      # 如果是 Push 触发（没有输入值），则默认运行脚本中的默认逻辑
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          python main.py ${{ github.event.inputs.stock_code }}
+        else
+          python main.py
+        fi
 
     - name: Commit and push JSON data
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
+        # 确保 data 目录存在，防止第一次运行报错
+        mkdir -p data
         git add data/*.json
-        git commit -m "Update stock data JSON" || echo "No changes to commit"
+        git commit -m "Update stock data JSON: ${{ github.event.inputs.stock_code }}" || echo "No changes to commit"
         git push
