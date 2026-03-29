@@ -2,70 +2,138 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>深度财务审计报告</title>
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f4f7f6; }
-        .card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { color: #2c3e50; border-left: 4px solid #3498db; padding-left: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; }
-        .green { color: #27ae60; font-weight: bold; }
+        /* 1. 基础样式与移动端适配 */
+        body { 
+            font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; 
+            padding: 10px; 
+            background: #f0f2f5; 
+            margin: 0;
+            color: #333;
+        }
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 16px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            margin-bottom: 15px; 
+        }
+        h2 { color: #1a1a1a; font-size: 1.2rem; margin: 0 0 8px 0; border-left: 5px solid #007bff; padding-left: 12px; }
+        p { color: #666; font-size: 0.9rem; margin: 5px 0; }
+
+        /* 2. 核心：解决右边显示不全（横向滚动） */
+        .table-wrapper { 
+            width: 100%; 
+            overflow-x: auto; /* 开启横向滚动 */
+            -webkit-overflow-scrolling: touch; /* iOS 滚动优化 */
+            border: 1px solid #ebeef5;
+            border-radius: 8px;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            white-space: nowrap; /* 强制不换行，确保指标横向排开 */
+            font-size: 13px;
+        }
+
+        th { 
+            background: #f8f9fa; 
+            color: #909399; 
+            font-weight: 600; 
+            padding: 12px 15px;
+            text-align: left;
+            position: sticky; /* 首行冻结（部分现代浏览器支持） */
+            top: 0;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+
+        /* 3. 数据高亮样式 */
+        .green { color: #2ecc71; font-weight: bold; }
         .red { color: #e74c3c; font-weight: bold; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        tr:hover { background-color: #f5f7fa; }
+
+        /* 移动端提示信息 */
+        .scroll-tip {
+            font-size: 11px;
+            color: #999;
+            text-align: right;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 id="stockName">正在加载数据...</h2>
+        <h2 id="stockName">正在读取审计数据...</h2>
         <p id="stockInfo">股票代码: --</p>
     </div>
 
     <div class="card">
-        <h3>审计明细</h3>
-        <div id="tableContainer">加载中...</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1rem; margin: 10px 0;">审计历史明细</h3>
+            <span class="scroll-tip">滑动查看更多 ➔</span>
+        </div>
+        <div class="table-wrapper" id="tableContainer">
+            </div>
     </div>
 
     <script>
-        // 1. 从 URL 获取股票代码，例如 index.html?code=002594
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
 
         if (!code) {
-            document.body.innerHTML = "<h1>请输入正确的股票代码</h1>";
+            document.body.innerHTML = "<div class='card'><h2>未指定股票代码</h2><p>请在链接后添加 ?code=002594</p></div>";
         } else {
-            // 2. 动态去寻找对应的 JSON 文件
             fetch(`./data/${code}.json`)
                 .then(response => {
-                    if (!response.ok) throw new Error('该股票数据尚未录入');
+                    if (!response.ok) throw new Error('数据尚未录入或代码错误');
                     return response.json();
                 })
-                .then(data => {
-                    renderTable(data);
-                })
+                .then(data => renderTable(data))
                 .catch(err => {
-                    document.getElementById('tableContainer').innerHTML = `<p style="color:red">${err.message}</p>`;
+                    document.getElementById('tableContainer').innerHTML = `<p style="color:red; padding:20px;">${err.message}</p>`;
                 });
         }
 
         function renderTable(data) {
-            document.getElementById('stockName').innerText = "财务审计报告";
-            document.getElementById('stockInfo').innerText = `查询代码: ${code}`;
+            document.getElementById('stockName').innerText = "深度财务审计报告";
+            document.getElementById('stockInfo').innerText = `查询对象: ${code} (数据源: GitHub Auto-Audit)`;
             
             let html = '<table><thead><tr>';
-            // 动态生成表头
             const keys = Object.keys(data[0]);
+            
+            // 生成表头
             keys.forEach(key => html += `<th>${key}</th>`);
             html += '</tr></thead><tbody>';
 
-            // 填充数据
+            // 填充数据并清洗格式
             data.forEach(row => {
                 html += '<tr>';
                 keys.forEach(key => {
                     let val = row[key];
-                    // 简单的染色逻辑：比如 ROE > 15% 变绿
-                    let className = (key.includes('ROE') && val > 15) ? 'green' : '';
-                    html += `<td class="${className}">${val ?? '--'}</td>`;
+                    
+                    // --- 解决日期 T00:00:00 问题 ---
+                    if (key === "报告日" && typeof val === "string") {
+                        val = val.split('T')[0]; // 只取 T 前面的日期部分
+                    }
+
+                    // --- 格式化数值（处理 null 或 undefined） ---
+                    if (val === null || val === undefined) val = '--';
+
+                    // --- 简单的染色逻辑（示例：ROE 高于 15 变绿） ---
+                    let tdClass = "";
+                    if (key.includes("ROE") && parseFloat(val) > 15) tdClass = "green";
+                    if (key.includes("资产负债率") && parseFloat(val) > 70) tdClass = "red";
+
+                    html += `<td class="${tdClass}">${val}</td>`;
                 });
                 html += '</tr>';
             });
