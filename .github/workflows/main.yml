@@ -19,8 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas openpyxl requests xlsxwriter
-
+        pip install pandas openpyxl requests xlsxwriter akshare
     - name: Run audit script
       run: python main.py
 
