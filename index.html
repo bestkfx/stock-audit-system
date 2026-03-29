@@ -68,6 +68,51 @@
             text-align: right;
             margin-bottom: 5px;
         }
+        /* 让表格容器支持滚动并限制高度（可选，或者直接让整个页面滚动） */
+#tableContainer {
+    overflow: auto;
+    max-width: 100%;
+    max-height: 90vh; /* 视窗高度的90%，留出头部空间 */
+}
+
+table {
+    border-collapse: separate; /* 必须用 separate，否则 sticky 会失效 */
+    border-spacing: 0;
+}
+
+/* 冻结第一行（日期表头） */
+thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* 背景色必须设置，否则滚动时会透明重叠 */
+    z-index: 10; /* 确保在内容上方 */
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* 冻结第一列（指标名称） */
+tbody td:first-child, thead th:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #f8f9fa;
+    z-index: 11; /* 级别比表头更高，防止交叉点被覆盖 */
+    font-weight: bold;
+    border-right: 1px solid #dee2e6;
+    min-width: 120px; /* 确保指标名不会被挤压 */
+}
+
+/* 左上角交叉点的特殊处理（第一行第一列） */
+thead th:first-child {
+    z-index: 12; /* 最高层级 */
+    top: 0;
+    left: 0;
+}
+
+/* 单元格基础样式微调 */
+th, td {
+    padding: 12px 15px;
+    white-space: nowrap; /* 禁止换行，方便横向滚动 */
+    border: 1px solid #dee2e6;
+}
     </style>
 </head>
 <body>
