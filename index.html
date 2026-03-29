@@ -113,6 +113,16 @@ th, td {
     white-space: nowrap; /* 禁止换行，方便横向滚动 */
     border: 1px solid #dee2e6;
 }
+        tbody tr:nth-child(even) td {
+    background-color: #ffffff;
+}
+tbody tr:nth-child(odd) td {
+    background-color: #fafafa;
+}
+/* 注意：由于第一列是 sticky 的，我们需要单独给第一列也设置对应的背景色，否则会漏出底色 */
+tbody tr:nth-child(odd) td:first-child {
+    background-color: #f0f0f0; 
+}
     </style>
 </head>
 <body>
