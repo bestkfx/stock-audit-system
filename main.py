@@ -28,10 +28,24 @@ def save_for_web(report_df, stock_code):
     # 复制一份数据进行 JSON 转换
     web_df = report_df.copy()
     
-    # 港股屏蔽逻辑预留
+    # 1. 定义你想要保留的港股指标精选列表
+    hk_keep_list = [
+        "报告日", "资产负债率(%)", "现金占比(%)", "流动比率", "速动比率", 
+        "商誉占比(%)", "存货堆积超额(%)", "销售毛利率(%)", "销售净利率(%)", 
+        "销售费用率(%)", "管理费用率(%)", "财务费用率(%)", "研发费用率(%)", 
+        "净现比(倍)", "自由现金流(元)", "自由现金流/净利润", "资本开支/净利润", 
+        "存货周转天数", "固定资产周转率(次)", "总资产周转率(次)", "权益乘数(杠杆倍数)", 
+        "净资产收益率(ROE/%)", "资产边际贡献(营收/投入)", "有形净资产收益率(%)"
+    ]
+
+    # 2. 执行屏蔽逻辑
     is_hk = len(str(stock_code)) == 5
     if is_hk:
-        pass # 后续在这里添加字段过滤逻辑
+        # 假设你的原始数据存储在 df (DataFrame) 中
+        # 只保留存在于 hk_keep_list 中的列
+        existing_columns = [col for col in hk_keep_list if col in df.columns]
+        df = df[existing_columns]
+        print(f"💡 已完成港股字段精简，保留了 {len(existing_columns)} 个核心指标")
     
     json_path = os.path.join(output_dir, f"{stock_code}.json")
     # orient='records' 是前端表格最喜欢的格式
